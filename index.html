@@ -325,8 +325,21 @@
             const confirmModalCancelBtn = document.getElementById('confirm-modal-cancel-btn');
             const confirmModalConfirmBtn = document.getElementById('confirm-modal-confirm-btn');
 
+            // --- Local Storage Management ---
+            function saveClientsToLocalStorage() {
+                localStorage.setItem('numericitClients', JSON.stringify(clients));
+            }
+
+            function loadClientsFromLocalStorage() {
+                const clientsJSON = localStorage.getItem('numericitClients');
+                if (clientsJSON) {
+                    return JSON.parse(clientsJSON);
+                }
+                return [];
+            }
+
             // App State
-            let clients = [];
+            let clients = loadClientsFromLocalStorage();
             let activeClientId = null;
             let activeChatId = null;
             let attachedFiles = [];
@@ -560,6 +573,7 @@
                 const chat = client.chats.find(ch => ch.id === activeChatId);
                 if (chat) {
                     chat.chatHistory.push({ type, sender, payload });
+                    saveClientsToLocalStorage(); // Save changes after updating history
                 }
             }
             
@@ -768,6 +782,7 @@
                     }]
                 };
                 clients.push(newClient);
+                saveClientsToLocalStorage(); // SAVE
                 clientForm.reset();
                 renderClientList();
                 switchActiveClient(newClient.id);
@@ -794,6 +809,7 @@
                         '¿Está seguro de que desea eliminar este cliente y todos sus chats? Esta acción no se puede deshacer.',
                         () => {
                             clients = clients.filter(c => c.id !== clientId);
+                            saveClientsToLocalStorage(); // SAVE
                             if (activeClientId === clientId) {
                                 activeClientId = null;
                                 activeChatId = null;
@@ -844,6 +860,7 @@
                             const client = clients.find(c => c.id === activeClientId);
                             if(client) {
                                client.chats = client.chats.filter(ch => ch.id !== chatId);
+                               saveClientsToLocalStorage(); // SAVE
                                if (activeChatId === chatId) {
                                    activeChatId = client.chats.length > 0 ? client.chats[0].id : null;
                                }
@@ -886,6 +903,7 @@
                         chatHistory: [{ type: 'text', sender: 'ai', payload: `Inicio del chat para el área de ${areaName}.`}]
                     };
                     client.chats.push(newChat);
+                    saveClientsToLocalStorage(); // SAVE
                     renderChatTabs();
                     switchActiveChat(newChat.id);
                     closeModal(addChatModal);
@@ -901,6 +919,7 @@
                     client.contactName = document.getElementById('edit-contact-name').value.trim();
                     client.contactEmail = document.getElementById('edit-contact-email').value.trim();
                     client.status = document.getElementById('edit-status').value;
+                    saveClientsToLocalStorage(); // SAVE
                     renderClientList();
                     if(activeClientId === clientId) renderConversation();
                 }
@@ -916,6 +935,7 @@
                     if(chat) {
                         chat.area = document.getElementById('edit-chat-area').value.trim();
                         chat.contactPerson = document.getElementById('edit-chat-contact').value.trim();
+                        saveClientsToLocalStorage(); // SAVE
                         renderChatTabs();
                         renderConversation();
                     }
